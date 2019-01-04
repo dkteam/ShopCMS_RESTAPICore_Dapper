@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -9,7 +10,11 @@ namespace ShopCMS_RESTAPICore_Dapper.Models
     {
         public int Id { get; set; }
 
+        [Required(ErrorMessage = "SKURequiredErrorMsg")]
+        [StringLength(8, ErrorMessage = "SKUMinAndMaxLengthErrorMsg", MinimumLength = 6)]
         public string Sku { get; set; }
+
+        public string ThumnailImage { get; set; }
 
         public string ImageUrl { get; set; }
 

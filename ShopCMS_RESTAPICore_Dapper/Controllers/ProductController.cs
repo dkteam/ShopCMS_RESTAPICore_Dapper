@@ -1,63 +1,182 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Threading.Tasks;
-using Dapper;
-using Microsoft.AspNetCore.Http;
+﻿using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
+using ShopCMS_RESTAPICore_Dapper.Dtos;
+using ShopCMS_RESTAPICore_Dapper.Extensions;
+using ShopCMS_RESTAPICore_Dapper.Filters;
 using ShopCMS_RESTAPICore_Dapper.Models;
+using ShopCMS_RESTAPICore_Dapper.Resources;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using System.Globalization;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ShopCMS_RESTAPICore_Dapper.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/{culture}/[controller]")]
     [ApiController]
+    [MiddlewareFilter(typeof(LocalizationPipeline))]
     public class ProductController : ControllerBase
     {
         private readonly string _connectionString;
+        private readonly ILogger<ProductController> _logger;
+        private readonly IStringLocalizer<ProductController> _localizer;
+        private readonly LocService _locService;
 
-        public ProductController(IConfiguration configuration)
+        public ProductController(IConfiguration configuration, ILogger<ProductController> logger, IStringLocalizer<ProductController> localizer, LocService locService)
         {
             _connectionString = configuration.GetConnectionString("DbConnectionString");
+            _logger = logger;
+            _localizer = localizer;
+            _locService = locService;
         }
 
         // GET: api/Product
         [HttpGet]
         public async Task<IEnumerable<Product>> Get()
         {
-            using(var conn=new SqlConnection(_connectionString))
+            var culture = CultureInfo.CurrentCulture.Name;
+            string text = _localizer["Test"];
+            string text1 = _locService.GetLocalizedHtmlString("ForgotPassword");
+
+            using (var conn = new SqlConnection(_connectionString))
             {
-                if (conn.State == System.Data.ConnectionState.Closed)
+                if (conn.State == ConnectionState.Closed)
                     conn.Open();
-                var result = await conn.QueryAsync<Product>("select * from Products", null, null, null, System.Data.CommandType.Text);
+
+                var result = await conn.QueryAsync<Product>("Get_Product_All", null, null, null, CommandType.StoredProcedure);
+
                 return result;
+            }
+        }
+
+        [HttpGet("paging",Name = "GetPaging")]
+        public async Task<PagedResult<Product>> GetPaging(string keyword, int categoryId, int pageIndex, int pageSize)
+        {
+            using (var conn = new SqlConnection(_connectionString))
+            {
+                if (conn.State == ConnectionState.Closed)
+                    conn.Open();
+
+                var parameters = new DynamicParameters();
+                parameters.Add("@keyword", keyword);
+                parameters.Add("@categoryId", categoryId);
+                parameters.Add("@pageIndex", pageIndex);
+                parameters.Add("@pageSize", pageSize);
+                parameters.Add("@totalRow", dbType: DbType.Int32, direction: ParameterDirection.Output);
+
+                var result = await conn.QueryAsync<Product>("Get_Product_AllPaging", parameters, null, null, CommandType.StoredProcedure);
+
+                int totalRow = parameters.Get<int>("@totalRow");
+
+                var pageResult = new PagedResult<Product>()
+                {
+                    Items = result.ToList(),
+                    TotalRow = totalRow,
+                    PageIndex = pageIndex,
+                    PageSize = pageSize
+                };
+
+                return pageResult;
             }
         }
 
         // GET: api/Product/5
         [HttpGet("{id}", Name = "Get")]
-        public string Get(int id)
+        public async Task<Product> Get(int id)
         {
-            return "value";
+            using (var conn = new SqlConnection(_connectionString))
+            {
+                if (conn.State == ConnectionState.Closed)
+                    conn.Open();
+
+                var parameters = new DynamicParameters();
+                parameters.Add("@id", id);
+
+                var result = await conn.QueryAsync<Product>("Get_Product_ById", parameters, null, null, CommandType.StoredProcedure);
+
+                return result.Single();
+            }
         }
 
         // POST: api/Product
         [HttpPost]
-        public void Post([FromBody] string value)
+        [ValidateModel]
+        public async Task<IActionResult> Post([FromBody] Product product)
         {
+            int newId = 0;
+            using (var conn = new SqlConnection(_connectionString))
+            {
+                if (conn.State == ConnectionState.Closed)
+                    conn.Open();
+
+                var parameters = new DynamicParameters();
+                parameters.Add("@sku", product.Sku);
+                parameters.Add("@thumnailImage", product.ThumnailImage);
+                parameters.Add("@imageUrl", product.ImageUrl);
+                parameters.Add("@imageList", product.ImageList);
+                parameters.Add("@price", product.Price);
+                parameters.Add("@promotionPrice", product.PromotionPrice);
+                parameters.Add("@viewCount", product.ViewCount);
+                parameters.Add("@isActive", product.IsActive);
+                parameters.Add("@id", dbType: DbType.Int32, direction: ParameterDirection.Output);
+
+                var result = await conn.ExecuteAsync("Create_Product", parameters, null, null, CommandType.StoredProcedure);
+
+                newId = parameters.Get<int>("@id");
+
+                return Ok(newId);
+            }
         }
 
         // PUT: api/Product/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        [ValidateModel]
+        public async Task<IActionResult> Put(int id, [FromBody] Product product)
         {
+            using (var conn = new SqlConnection(_connectionString))
+            {
+                if (conn.State == ConnectionState.Closed)
+                    conn.Open();
+
+                var parameters = new DynamicParameters();
+                parameters.Add("@id", product.Id);
+                parameters.Add("@sku", product.Sku);
+                parameters.Add("@thumnailImage", product.ThumnailImage);
+                parameters.Add("@imageUrl", product.ImageUrl);
+                parameters.Add("@imageList", product.ImageList);
+                parameters.Add("@price", product.Price);
+                parameters.Add("@promotionPrice", product.PromotionPrice);
+                parameters.Add("@viewCount", product.ViewCount);
+                parameters.Add("@isActive", product.IsActive);
+                parameters.Add("@rateTotal", product.RateTotal);
+                parameters.Add("@rateCount", product.RateCount);
+
+                await conn.ExecuteAsync("Update_Product", parameters, null, null, CommandType.StoredProcedure);
+
+                return Ok();
+            }
         }
 
         // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public async Task Delete(int id)
         {
+            using (var conn = new SqlConnection(_connectionString))
+            {
+                if (conn.State == ConnectionState.Closed)
+                    conn.Open();
+
+                var parameters = new DynamicParameters();
+                parameters.Add("@id", id);
+
+                await conn.ExecuteAsync("Delete_Product_ById", parameters, null, null, CommandType.StoredProcedure);
+            }
         }
     }
 }

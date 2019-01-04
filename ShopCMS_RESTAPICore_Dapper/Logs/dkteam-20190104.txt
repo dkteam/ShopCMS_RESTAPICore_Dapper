@@ -1,0 +1,7 @@
+2019-01-04T10:24:21.9239273+07:00 0HLJHUFCV2UTT:00000001 [INF] Request starting HTTP/1.1 GET http://localhost:44349/api/Product   (ca22a1cb)
+2019-01-04T10:24:21.9268619+07:00 0HLJHUFCV2UTT:00000001 [INF] Route matched with "{action = \"Get\", controller = \"Product\"}". Executing action "ShopCMS_RESTAPICore_Dapper.Controllers.ProductController.Get (ShopCMS_RESTAPICore_Dapper)" (a44c0341)
+2019-01-04T10:24:21.9292738+07:00 0HLJHUFCV2UTT:00000001 [INF] Executing action method "ShopCMS_RESTAPICore_Dapper.Controllers.ProductController.Get (ShopCMS_RESTAPICore_Dapper)" - Validation state: Valid (dad538d7)
+2019-01-04T10:24:21.9365861+07:00 0HLJHUFCV2UTT:00000001 [INF] Executed action method "ShopCMS_RESTAPICore_Dapper.Controllers.ProductController.Get (ShopCMS_RESTAPICore_Dapper)", returned result "Microsoft.AspNetCore.Mvc.ObjectResult" in 4.6289ms. (50a9e262)
+2019-01-04T10:24:21.9393389+07:00 0HLJHUFCV2UTT:00000001 [INF] Executing ObjectResult, writing value of type '"System.Collections.Generic.List`1[[ShopCMS_RESTAPICore_Dapper.Models.Product, ShopCMS_RESTAPICore_Dapper, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"'. (8a1b66c8)
+2019-01-04T10:24:21.9425888+07:00 0HLJHUFCV2UTT:00000001 [INF] Executed action "ShopCMS_RESTAPICore_Dapper.Controllers.ProductController.Get (ShopCMS_RESTAPICore_Dapper)" in 12.9262ms (afa2e885)
+2019-01-04T10:24:21.9454530+07:00 0HLJHUFCV2UTT:00000001 [INF] Request finished in 21.0611ms 200 application/json; charset=utf-8 (791a596a)
