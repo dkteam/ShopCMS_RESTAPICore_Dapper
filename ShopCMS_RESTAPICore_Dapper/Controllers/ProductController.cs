@@ -41,15 +41,18 @@ namespace ShopCMS_RESTAPICore_Dapper.Controllers
         public async Task<IEnumerable<Product>> Get()
         {
             var culture = CultureInfo.CurrentCulture.Name;
-            string text = _localizer["Test"];
-            string text1 = _locService.GetLocalizedHtmlString("ForgotPassword");
+            //string text = _localizer["Test"];
+            //string text1 = _locService.GetLocalizedHtmlString("ForgotPassword");
 
             using (var conn = new SqlConnection(_connectionString))
             {
                 if (conn.State == ConnectionState.Closed)
                     conn.Open();
 
-                var result = await conn.QueryAsync<Product>("Get_Product_All", null, null, null, CommandType.StoredProcedure);
+                var parameters = new DynamicParameters();
+                parameters.Add("@language", culture);
+
+                var result = await conn.QueryAsync<Product>("Get_Product_All", parameters, null, null, CommandType.StoredProcedure);
 
                 return result;
             }
@@ -68,6 +71,7 @@ namespace ShopCMS_RESTAPICore_Dapper.Controllers
                 parameters.Add("@categoryId", categoryId);
                 parameters.Add("@pageIndex", pageIndex);
                 parameters.Add("@pageSize", pageSize);
+                parameters.Add("@language", CultureInfo.CurrentCulture.Name);
                 parameters.Add("@totalRow", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
                 var result = await conn.QueryAsync<Product>("Get_Product_AllPaging", parameters, null, null, CommandType.StoredProcedure);
@@ -97,6 +101,7 @@ namespace ShopCMS_RESTAPICore_Dapper.Controllers
 
                 var parameters = new DynamicParameters();
                 parameters.Add("@id", id);
+                parameters.Add("@language", CultureInfo.CurrentCulture.Name);
 
                 var result = await conn.QueryAsync<Product>("Get_Product_ById", parameters, null, null, CommandType.StoredProcedure);
 
@@ -116,6 +121,14 @@ namespace ShopCMS_RESTAPICore_Dapper.Controllers
                     conn.Open();
 
                 var parameters = new DynamicParameters();
+                parameters.Add("@name", product.Name);
+                parameters.Add("@description", product.Description);
+                parameters.Add("@content", product.Content);
+                parameters.Add("@seoTitle", product.SeoTitle);
+                parameters.Add("@seoAlias", product.SeoAlias);
+                parameters.Add("@seoKeyword", product.SeoKeyword);
+                parameters.Add("@seoDescription", product.SeoDescription);
+
                 parameters.Add("@sku", product.Sku);
                 parameters.Add("@thumnailImage", product.ThumnailImage);
                 parameters.Add("@imageUrl", product.ImageUrl);
@@ -124,7 +137,10 @@ namespace ShopCMS_RESTAPICore_Dapper.Controllers
                 parameters.Add("@promotionPrice", product.PromotionPrice);
                 parameters.Add("@viewCount", product.ViewCount);
                 parameters.Add("@isActive", product.IsActive);
+                parameters.Add("@language", CultureInfo.CurrentCulture.Name);
                 parameters.Add("@id", dbType: DbType.Int32, direction: ParameterDirection.Output);
+
+                parameters.Add("@categoryIdS", product.CategoryIds);
 
                 var result = await conn.ExecuteAsync("Create_Product", parameters, null, null, CommandType.StoredProcedure);
 
@@ -146,6 +162,15 @@ namespace ShopCMS_RESTAPICore_Dapper.Controllers
 
                 var parameters = new DynamicParameters();
                 parameters.Add("@id", product.Id);
+
+                parameters.Add("@name", product.Name);
+                parameters.Add("@description", product.Description);
+                parameters.Add("@content", product.Content);
+                parameters.Add("@seoTitle", product.SeoTitle);
+                parameters.Add("@seoAlias", product.SeoAlias);
+                parameters.Add("@seoKeyword", product.SeoKeyword);
+                parameters.Add("@seoDescription", product.SeoDescription);
+
                 parameters.Add("@sku", product.Sku);
                 parameters.Add("@thumnailImage", product.ThumnailImage);
                 parameters.Add("@imageUrl", product.ImageUrl);
@@ -156,6 +181,9 @@ namespace ShopCMS_RESTAPICore_Dapper.Controllers
                 parameters.Add("@isActive", product.IsActive);
                 parameters.Add("@rateTotal", product.RateTotal);
                 parameters.Add("@rateCount", product.RateCount);
+                parameters.Add("@language", CultureInfo.CurrentCulture.Name);
+
+                parameters.Add("@categoryIds", product.CategoryIds);
 
                 await conn.ExecuteAsync("Update_Product", parameters, null, null, CommandType.StoredProcedure);
 

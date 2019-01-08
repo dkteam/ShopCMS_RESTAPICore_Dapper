@@ -35,5 +35,27 @@ namespace ShopCMS_RESTAPICore_Dapper.Models
         public int? RateTotal { get; set; }
 
         public int? RateCount { get; set; }
+
+
+        public string Name { get; set; }
+
+        public string Content { get; set; }   
+
+        public string Description { get; set; }
+
+        public string SeoTitle { get; set; }
+
+        public string SeoAlias { get; set; }
+
+        public string SeoKeyword { get; set; }
+
+        public string SeoDescription { get; set; }
+
+        public string LanguageId { get; set; }
+
+
+        public string CategoryIds { get; set; }
+
+        public string CategoryName { get; set; }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Localization.Routing;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using ShopCMS_RESTAPICore_Dapper.Data;
+using ShopCMS_RESTAPICore_Dapper.Models;
 using ShopCMS_RESTAPICore_Dapper.Resources;
 using Swashbuckle.AspNetCore.Swagger;
 using System.Globalization;
@@ -31,6 +34,22 @@ namespace ShopCMS_RESTAPICore_Dapper
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddTransient<IUserStore<AppUser>, UserStore>();
+            services.AddTransient<IRoleStore<AppRole>, RoleStore>();
+            services.AddIdentity<AppUser, AppRole>()
+                .AddDefaultTokenProviders();
+
+            services.Configure<IdentityOptions>(opt =>
+            {
+                // Default Password settings.
+                opt.Password.RequireDigit = true;
+                opt.Password.RequireLowercase = false;
+                opt.Password.RequireNonAlphanumeric = false;
+                opt.Password.RequireUppercase = false;
+                opt.Password.RequiredLength = 6;
+                opt.Password.RequiredUniqueChars = 1;
+            });
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1).AddJsonOptions(opt =>
             {
                 opt.SerializerSettings.ContractResolver = new DefaultContractResolver();
@@ -114,8 +133,6 @@ namespace ShopCMS_RESTAPICore_Dapper
                 app.UseHsts();
             }
 
-            app.UseHttpsRedirection();
-
             // Enable middleware to serve generated Swagger as a JSON endpoint.
             app.UseSwagger();
 
@@ -126,6 +143,8 @@ namespace ShopCMS_RESTAPICore_Dapper
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "DKTeam RESTful API Dapper V1");
             });
 
+            app.UseHttpsRedirection();
+            app.UseAuthentication();
             app.UseMvc();
         }
     }
